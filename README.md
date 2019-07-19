@@ -17,3 +17,16 @@ Amazon Elastic Compute Cloud (Amazon EC2), load balancers, Lambda, and Network a
 |Lambda  |  Invocations |  The number of times a function is invoked in response to an event or invocation API call |
 |NAT Gateway |  ErrorPortAllocation | The number of times the NAT gateway could not allocate a source port  |
 |NAT Gateway  | ActiveConnectionCount  |  The total number of concurrent active TCP connections through the NAT gateway |
+
+## usage
+
+To use the macro, add the following line to the top of your templates:
+
+Transform: AlarmMacro
+
+
+## macro order for serverless templates
+
+If you are deploying a serverless template please ensure you list this macro after the serverless transform
+
+Transform: ["AWS::Serverless-2016-10-31", "AlarmMacro"]
