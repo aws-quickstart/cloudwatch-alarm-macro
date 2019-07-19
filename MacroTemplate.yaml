@@ -1,0 +1,35 @@
+# Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  Template for cloudwatch-alert-macro
+
+Resources:
+  AlarmMacro:
+   Type: AWS::CloudFormation::Macro
+   Properties:
+     Name: AlarmMacro
+     FunctionName: !GetAtt AlarmMacroFunction.Arn
+
+  AlarmMacroFunction:
+    Type: "AWS::Serverless::Function"
+    Properties:
+      FunctionName: "AlarmMacroFunction"
+      Description: "Lambda Function for Alarm macro that appends alarms to specified resources in cloudformation templates"
+      Handler: "alarm_macro.handler"
+      MemorySize: 128
+      Runtime: "python3.6"
+      Timeout: 60
+      CodeUri: ./src
+      Policies:
+      - AWSLambdaBasicExecutionRole
+      Environment:
+        Variables:
+          SNSTopic: !Ref MonitoringTopic
+
+  MonitoringTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: Default-CloudWatch-Alarm-Topic
