@@ -1,4 +1,4 @@
-# cloudwatch-alert-macro
+# cloudwatch-alarm-macro
 
 CloudFormation Macro that will append a set of CloudWatch alarms for supported resources.
 
