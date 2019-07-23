@@ -24,6 +24,8 @@ To use the macro, add the following line to the top of your templates:
 
 Transform: AlarmMacro
 
+A sample template has been provided in /samples
+
 
 ## macro order for serverless templates
 

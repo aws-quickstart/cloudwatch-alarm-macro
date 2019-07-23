@@ -20,13 +20,13 @@ def handler(event, context):
         properties = resources[resource]
         try:
             if properties['Type'] == 'AWS::EC2::Instance':
-                ec2(resource, properties, alarm_dictionary)
+                ec2(resource, alarm_dictionary)
             elif properties['Type'] == 'AWS::ElasticLoadBalancingV2::LoadBalancer':
                 load_balancer(resource, properties, alarm_dictionary)
             elif properties['Type'] == 'AWS::EC2::NatGateway':
-                Nat_Gateway(resource, properties, alarm_dictionary)
+                Nat_Gateway(resource, alarm_dictionary)
             elif properties['Type'] == 'AWS::Lambda::Function':
-                AWS_lambda(resource, properties, alarm_dictionary)
+                AWS_lambda(resource, alarm_dictionary)
             else:
                 logger.info('Resource {} is not a supported type'.format(resource))
         except Exception as e:
@@ -51,7 +51,7 @@ def handler(event, context):
     return resp
 
 
-def ec2(resource, properties, alarm_dictionary):
+def ec2(resource, alarm_dictionary):
     logger.info('Instance Found: {}'.format(resource))
     cpu_alarm = {f'{resource}CpuAlarm': {
         "Type": "AWS::CloudWatch::Alarm",
@@ -303,9 +303,8 @@ def load_balancer(resource, properties, alarm_dictionary):
         logger.error('Unknown Load Balancer Type'.format(e))
         raise
 
-def AWS_lambda(resource, properties, alarm_dictionary):
+def AWS_lambda(resource, alarm_dictionary):
     logger.info('Lambda Found: {}'.format(resource))
-    Function_Name = properties['Properties']['FunctionName']
     lambda_4XX_errors = {f'{resource}4xx': {
         "Type": "AWS::CloudWatch::Alarm",
         "Properties": {
@@ -334,7 +333,7 @@ def AWS_lambda(resource, properties, alarm_dictionary):
             "ComparisonOperator": "GreaterThanOrEqualToThreshold",
             "Dimensions": [{
                 "Name": "FunctionName",
-                "Value": f'{Function_Name}'}],
+                "Value": {"Ref": f'{resource}'}}],
             "InsufficientDataActions": [f'{Monitoring_Topic}'],
             "MetricName": "Errors",
             "Namespace": "AWS/Lambda",
@@ -373,7 +372,7 @@ def AWS_lambda(resource, properties, alarm_dictionary):
             "ComparisonOperator": "GreaterThanOrEqualToThreshold",
             "Dimensions": [{
                 "Name": "FunctionName",
-                "Value": f'{Function_Name}'}],
+                "Value": {"Ref": f'{resource}'}}],
             "InsufficientDataActions": [f'{Monitoring_Topic}'],
             "MetricName": "Invocations",
             "Namespace": "AWS/Lambda",
@@ -385,7 +384,8 @@ def AWS_lambda(resource, properties, alarm_dictionary):
     }}
     alarm_dictionary.update(lambda_Invocations)
 
-def Nat_Gateway(resource, properties, alarm_dictionary):
+def Nat_Gateway(resource, alarm_dictionary):
+    logger.info('NAT Gateway Found: {}'.format(resource))
     Nat_ErrorPortAllocation = {f'{resource}ErrorPortAllocation': {
         "Type": "AWS::CloudWatch::Alarm",
         "Properties": {
@@ -463,3 +463,5 @@ def Nat_Gateway(resource, properties, alarm_dictionary):
         }
     }}
     alarm_dictionary.update(Nat_ActiveConnectionCount)
+
+

@@ -1,0 +1,90 @@
+# Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AlarmMacro
+Description: |
+  Sample Template for cloudwatch-alert-macro
+  NOTE: This template will deploy resources that are not eligible for the free tier.
+
+Parameters:
+  SubnetID1:
+    Description: subnet-xxxxx
+    Type: String
+  SubnetID2:
+    Description: subnet-xxxxx
+    Type: String
+  LatestAmiId:
+    Description: Fetch latest AMI for amazon linux 2
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2'
+
+Resources:
+  Application1:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref LatestAmiId
+      InstanceType: t2.nano
+      Monitoring: True
+      Tags:
+        -
+          Key: Name
+          Value: CW-Macro-Demo
+
+  ALB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: Test-ALB
+      Type: application
+      Subnets:
+        - !Ref SubnetID1
+        - !Ref SubnetID2
+
+  NLB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: Test-NLB
+      Type: network
+      Subnets:
+        - !Ref SubnetID1
+        - !Ref SubnetID2
+
+  ExampleLambdaFunction:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      Runtime: python3.6
+      Code:
+        ZipFile: |
+          def handler(event, context):
+            print('Hello World')
+      Description: Example lambda
+      Handler: index.handler
+      Role: !GetAtt ExampleLambdaRole.Arn
+
+  ExampleLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: "CW-Example-Lambda-Role"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Path: "/"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  ExampleNatGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt ExampleElasticIP.AllocationId
+      SubnetId: !Ref SubnetID1
+
+  ExampleElasticIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: standard
