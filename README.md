@@ -1,4 +1,5 @@
 # cloudwatch-alarm-macro
+Now Supports CloudFormation Conditions
 
 CloudFormation Macro that will append a set of CloudWatch alarms for supported resources.
 
@@ -32,3 +33,4 @@ A sample template has been provided in /samples
 If you are deploying a serverless template please ensure you list this macro after the serverless transform
 
 Transform: ["AWS::Serverless-2016-10-31", "AlarmMacro"]
+
